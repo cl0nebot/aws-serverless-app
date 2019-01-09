@@ -12,5 +12,5 @@ build:
 	go build -o perf-mac .
 
 run:
-	./perf-mac -debug false
+	./perf-mac -debug
 
