@@ -25,6 +25,16 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	} else {
 		// assume POST with format key=value or init=#
 		tokens := strings.Split(request.Body, "=")
+		if len(tokens) != 2 {
+			log.Printf("Error: invalid PUT request %s, it should be of format key=value", request.Body)
+			return events.APIGatewayProxyResponse{
+				Body:       "Bad Request",
+				StatusCode: 400,
+				Headers: map[string]string{
+					"Content-Type": "text/plain",
+				},
+			}, fmt.Errorf("Invalid put request: %s", request.Body)
+		}
 		if tokens[0] == "init" {
 			// initialize Redis by inserting specified number of random keys
 			result = fmt.Sprintf("Initialized %s keys", tokens[1])

@@ -1,64 +1,47 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"encoding/json"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
+func requestEvent(reqID, orgID, covID string) events.APIGatewayProxyRequest {
+	req := EligibilityRequest{
+		ResourceType: "EligibilityRequest",
+		ID:           reqID,
+		Patient:      ReferenceData{Reference: "deceased"},
+		Organization: ReferenceData{Reference: orgID},
+		Insurer:      ReferenceData{Reference: "cygna"},
+		Coverage:     ReferenceData{Reference: covID},
+	}
+	body, _ := json.Marshal(&req)
+	return events.APIGatewayProxyRequest{
+		Body: string(body),
+	}
+}
+
 func TestHandler(t *testing.T) {
-	t.Run("Unable to get IP", func(t *testing.T) {
-		DefaultHTTPGetAddress = "http://127.0.0.1:12345"
-
-		_, err := handler(events.APIGatewayProxyRequest{})
+	t.Run("Bad Request", func(t *testing.T) {
+		respEvt, err := handler(events.APIGatewayProxyRequest{
+			Body: "BadRequest",
+		})
 		if err == nil {
-			t.Fatal("Error failed to trigger with an invalid request")
+			t.Fatal("Error failed to trigger with a bad request")
 		}
-	})
-
-	t.Run("Non 200 Response", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(500)
-		}))
-		defer ts.Close()
-
-		DefaultHTTPGetAddress = ts.URL
-
-		_, err := handler(events.APIGatewayProxyRequest{})
-		if err != nil && err.Error() != ErrNon200Response.Error() {
-			t.Fatalf("Error failed to trigger with an invalid HTTP response: %v", err)
-		}
-	})
-
-	t.Run("Unable decode IP", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(500)
-		}))
-		defer ts.Close()
-
-		DefaultHTTPGetAddress = ts.URL
-
-		_, err := handler(events.APIGatewayProxyRequest{})
-		if err == nil {
-			t.Fatal("Error failed to trigger with an invalid HTTP response")
+		if respEvt.StatusCode != 400 {
+			t.Fatalf("Response statusCode %d should be 400", respEvt.StatusCode)
 		}
 	})
 
 	t.Run("Successful Request", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(200)
-			fmt.Fprintf(w, "127.0.0.1")
-		}))
-		defer ts.Close()
-
-		DefaultHTTPGetAddress = ts.URL
-
-		_, err := handler(events.APIGatewayProxyRequest{})
+		respEvt, err := handler(requestEvent("test-1", "provider-1", "coverage-1"))
 		if err != nil {
 			t.Fatal("Everything should be ok")
+		}
+		if respEvt.StatusCode != 200 {
+			t.Fatalf("Response statusCode %d should be 200", respEvt.StatusCode)
 		}
 	})
 }

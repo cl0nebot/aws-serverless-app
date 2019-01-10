@@ -1,64 +1,138 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"encoding/json"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func TestHandler(t *testing.T) {
-	t.Run("Unable to get IP", func(t *testing.T) {
-		DefaultHTTPGetAddress = "http://127.0.0.1:12345"
+func textRequest(value string) events.APIGatewayProxyRequest {
+	return events.APIGatewayProxyRequest{
+		Headers: map[string]string{"Content-Type": "text/plain"},
+		Body:    value,
+	}
+}
 
-		_, err := handler(events.APIGatewayProxyRequest{})
-		if err == nil {
-			t.Fatal("Error failed to trigger with an invalid request")
-		}
-	})
+func jsonRequest(org *OrgStatus) events.APIGatewayProxyRequest {
+	body, _ := json.Marshal(org)
+	return events.APIGatewayProxyRequest{
+		Headers: map[string]string{"Content-Type": "application/json"},
+		Body:    string(body),
+	}
+}
 
-	t.Run("Non 200 Response", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(500)
-		}))
-		defer ts.Close()
+func TestJsonRequestHandler(t *testing.T) {
+	org := OrgStatus{
+		OrgID:         "org1",
+		Status:        "Active",
+		EffectiveDate: "2018-12-12",
+	}
 
-		DefaultHTTPGetAddress = ts.URL
-
-		_, err := handler(events.APIGatewayProxyRequest{})
-		if err != nil && err.Error() != ErrNon200Response.Error() {
-			t.Fatalf("Error failed to trigger with an invalid HTTP response: %v", err)
-		}
-	})
-
-	t.Run("Unable decode IP", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(500)
-		}))
-		defer ts.Close()
-
-		DefaultHTTPGetAddress = ts.URL
-
-		_, err := handler(events.APIGatewayProxyRequest{})
-		if err == nil {
-			t.Fatal("Error failed to trigger with an invalid HTTP response")
-		}
-	})
-
-	t.Run("Successful Request", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(200)
-			fmt.Fprintf(w, "127.0.0.1")
-		}))
-		defer ts.Close()
-
-		DefaultHTTPGetAddress = ts.URL
-
-		_, err := handler(events.APIGatewayProxyRequest{})
+	t.Run("Inforce JSON Request", func(t *testing.T) {
+		resp, err := handler(jsonRequest(&org))
 		if err != nil {
-			t.Fatal("Everything should be ok")
+			t.Fatalf("Failed with error %+v", err)
+		}
+		var respOrg OrgStatus
+		err = json.Unmarshal([]byte(resp.Body), &respOrg)
+		if err != nil {
+			t.Fatalf("Invalid JSON response %s", resp.Body)
+		}
+		if !respOrg.Inforce {
+			t.Fatal("org should be in-force")
+		}
+	})
+
+	t.Run("Inactive JSON Request", func(t *testing.T) {
+		org.Status = "Inactive"
+		resp, err := handler(jsonRequest(&org))
+		if err != nil {
+			t.Fatalf("Failed with error %+v", err)
+		}
+		var respOrg OrgStatus
+		err = json.Unmarshal([]byte(resp.Body), &respOrg)
+		if err != nil {
+			t.Fatalf("Invalid JSON response %s", resp.Body)
+		}
+		if respOrg.Inforce {
+			t.Fatal("org should not be in-force")
+		}
+	})
+
+	t.Run("In-effective JSON Request", func(t *testing.T) {
+		org.Status = "Active"
+		org.EffectiveDate = "2020-01-01"
+		resp, err := handler(jsonRequest(&org))
+		if err != nil {
+			t.Fatalf("Failed with error %+v", err)
+		}
+		var respOrg OrgStatus
+		err = json.Unmarshal([]byte(resp.Body), &respOrg)
+		if err != nil {
+			t.Fatalf("Invalid JSON response %s", resp.Body)
+		}
+		if respOrg.Inforce {
+			t.Fatal("org should not be in-force")
+		}
+	})
+
+	t.Run("Bad JSON Request", func(t *testing.T) {
+		resp, err := handler(events.APIGatewayProxyRequest{
+			Headers: map[string]string{"Content-Type": "application/json"},
+			Body:    "BadRequest",
+		})
+		if err == nil {
+			t.Fatal("Bad request should faile with error")
+		}
+		if resp.StatusCode != 400 {
+			t.Fatalf("Bad request status code %d should be 400", resp.StatusCode)
+		}
+	})
+}
+
+func TestTextRequestHandler(t *testing.T) {
+
+	t.Run("Inforce Text Request", func(t *testing.T) {
+		resp, err := handler(textRequest("org1,Active,2018-12-01"))
+		if err != nil {
+			t.Fatalf("Failed with error %+v", err)
+		}
+		if resp.Body != "true" {
+			t.Fatal("org should be in-force")
+		}
+	})
+
+	t.Run("Inactive Text Request", func(t *testing.T) {
+		resp, err := handler(textRequest("org1,Inactive,2018-12-01"))
+		if err != nil {
+			t.Fatalf("Failed with error %+v", err)
+		}
+		if resp.Body != "false" {
+			t.Fatal("org should not be in-force")
+		}
+	})
+
+	t.Run("In-effective Text Request", func(t *testing.T) {
+		resp, err := handler(textRequest("org1,Active,2020-01-01"))
+		if err != nil {
+			t.Fatalf("Failed with error %+v", err)
+		}
+		if resp.Body != "false" {
+			t.Fatal("org should not be in-force")
+		}
+	})
+
+	t.Run("Bad Text Request", func(t *testing.T) {
+		resp, err := handler(events.APIGatewayProxyRequest{
+			Headers: map[string]string{"Content-Type": "text/plain"},
+			Body:    "",
+		})
+		if err == nil {
+			t.Fatal("Bad request should faile with error")
+		}
+		if resp.StatusCode != 400 {
+			t.Fatalf("Bad request status code %d should be 400", resp.StatusCode)
 		}
 	})
 }

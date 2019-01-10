@@ -27,6 +27,15 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	if reqType == "text/plain" {
 		// assume csv data 'OrgID,Status,EffectiveDate'
 		tokens := strings.Split(request.Body, ",")
+		if len(tokens) != 3 {
+			return events.APIGatewayProxyResponse{
+				StatusCode: 400,
+				Headers: map[string]string{
+					"Content-Type": "text/plain",
+				},
+				Body: "{}",
+			}, fmt.Errorf("Invalid request %s. it should be of format 'orgID,statu,effectiveDate'", request.Body)
+		}
 		reqBody = OrgStatus{
 			OrgID:         tokens[0],
 			Status:        tokens[1],

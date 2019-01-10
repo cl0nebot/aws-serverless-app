@@ -26,7 +26,7 @@ func putToRedis(key string, value string) error {
 	log.Printf("Add to Redis key=%s, value=%s", key, value)
 	result, err := client.Set(key, value, 0).Result()
 	ttl, _ := client.TTL(key).Result()
-	log.Printf("Result %s TTL: %d\n", result, ttl.Seconds())
+	log.Printf("Result %s TTL: %f\n", result, ttl.Seconds())
 	return err
 }
 

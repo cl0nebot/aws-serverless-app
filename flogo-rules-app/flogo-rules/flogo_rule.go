@@ -40,7 +40,7 @@ func invokeRules(org *OrgStatus) {
 
 	// get rule result and update the OrgStatus
 	inforce, _ := t1.GetBool("Inforce")
-	log.Printf("Set rule result inforce=%s\n", inforce)
+	log.Printf("Set rule result inforce=%t\n", inforce)
 	org.Inforce = inforce
 
 	// Retract tuples
