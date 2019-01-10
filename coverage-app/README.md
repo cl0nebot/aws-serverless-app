@@ -8,7 +8,7 @@ The coverage service instances are deployed in muliple PODs, and the service is 
 
 ## Develop BE applications
 
-After you install the TIBCO BusinessEvents 5.5.0 or above, you can launch the BE studio, and import the project source code from `./src/Coverage`.  Then, right click the project root in the "Studio Explorer", and select "Properties". Select "Java Build Path", then edit the jars under the "Libraries" tab.  Notice that this project has compile-time dependency to 2 aws-java-sdk jars for direct invocation of AWS lambda functions.  You need to fix the path of these 2 jars to match your project location. One way to fix the path is to remove and then add them back with correct path.  This step can be automated if you use Maven.
+After you install the TIBCO BusinessEvents 5.5.0 or above, you can launch the BE studio, and import the project source code from `./src/Coverage`.  Then, right click the project root in the "Studio Explorer", and select "Properties". Select "Java Build Path", then edit the jars under the "Libraries" tab.  Notice that this project has compile-time dependency to 2 aws-java-sdk jars for direct invocation of AWS lambda functions.  You need to fix the path of these 2 jars to match your project location. One way to fix the path is to remove and then add them back with correct path.  This step can be automated if you use Maven.  If you are interested in how to setup Maven build and unit test for TIBCO BE projects, you may check the [be-sample](https://github.com/yxuco/be_sample/tree/master/SimpleHTTP) that contains a sample BE project and Maven POM files to build and test the BE project together with dependent Java projects and third-party jars.
 
 ## Test BE application locally
 
