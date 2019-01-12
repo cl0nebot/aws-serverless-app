@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration:StudioProjectConfiguration xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:configuration="http:///com/tibco/cep/studio/common/configuration/model/project_configuration.ecore" name="Coverage" version="5.5.0" build="170" xpathVersion="2.0">
   <javaSourceFolderEntries entryType="JAVA_SOURCE_FOLDER" path="/Coverage/JavaSrc" readOnly="true"/>
-  <enterpriseArchiveConfiguration name="Coverage" author="yxu@tibco.com" version="30" path="/Users/yxu/work/chc/coverage-app/build/Coverage.ear" overwrite="true"/>
+  <enterpriseArchiveConfiguration name="Coverage" author="yxu@tibco.com" version="38" path="/Users/yxu/work/chc/coverage-app/build/Coverage.ear" overwrite="true"/>
   <bpmnProcessSettings/>
 </configuration:StudioProjectConfiguration>

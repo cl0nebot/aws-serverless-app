@@ -1,0 +1,40 @@
+/**
+ * @description fetch effective dates of a coverage from Activespaces. 
+ * @author Playing-Branes.local
+ */
+rule Rules.invokeAS {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.CoverageRequest evt;
+		Concepts.CoverageStatus cov;
+	}
+	when {
+		Config.CacheType == Config.AS;
+		evt.uuid == cov.reqUuid;
+		cov.effectiveDate == "";
+	}
+	then {
+		Object logger = Log.getLogger("invokeAS");
+		Log.log(logger, "info", "Get coverage %s from AS", cov.reference);
+		try {
+			long startTime = System.currentTimeMillis();
+			Store.open(Config.AS_URL, "coverage");
+			Concepts.Coverage req = Instance.newTransientInstance("/Concepts/Coverage");
+			req.orgid = cov.reference;
+			Concepts.Coverage resp = Store.get(Config.AS_URL, "coverage", req);
+			Store.close(Config.AS_URL, "coverage");
+			Log.log(logger, "info", "Cache query elapsed time %d ms", (System.currentTimeMillis() - startTime) );
+			Log.log(logger, "info", "Got from AS: %s", Instance.serializeToJSON(resp, false, "coverage"));
+			
+			cov.effectiveDate = resp.effective_date;
+			cov.expireDate = resp.expire_date;
+			Log.log(logger, "info", "Set coverage effective period [%s, %s]", cov.effectiveDate, cov.expireDate);
+		} catch (Exception e) {
+			Log.logException(logger, "error", "Failed to validate coverage against ActiveSpaces", e);
+			cov.inforce = false;
+		}
+	}
+}

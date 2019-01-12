@@ -2,7 +2,7 @@
  * @description fetch effective dates of a coverage from cache by invoking lambda function
  * @author Playing-Branes.local
  */
-rule Rules.invokeCacheLambda {
+rule Rules.invokeRedisLambda {
 	attribute {
 		priority = 5;
 		forwardChain = true;
@@ -12,18 +12,19 @@ rule Rules.invokeCacheLambda {
 		Concepts.CoverageStatus cov;
 	}
 	when {
+		Config.CacheType == Config.RedisLambda;
 		evt.uuid == cov.reqUuid;
 		cov.effectiveDate == "";
 	}
 	then {
-		Object logger = Log.getLogger("invokeCacheLambda");
+		Object logger = Log.getLogger("invokeRedisLambda");
 		
 		// may move this to engine startup
 		String region = System.getGlobalVariableAsString("AWS_REGION", "us-west-2");
 		Object client = Lambda.client(region);
 		
 		// call lambda function
-		String arn = System.getGlobalVariableAsString("CACHE_LAMBDA_ARN", "");
+		String arn = System.getGlobalVariableAsString("REDIS_LAMBDA_ARN", "");
 		String req = "{\"httpMethod\": \"GET\", \"queryStringParameters\": {\"key\": \"" + cov.reference + "\"} }";
 		Log.log(logger, "info", "Call lambda function %s with payload:\n  %s", arn, req);
 		try {
@@ -48,7 +49,7 @@ rule Rules.invokeCacheLambda {
 				cov.inforce = false;
 			}
 		} catch (Exception e) {
-			Log.logException(logger, "error", "Failed to check cache", e);
+			Log.logException(logger, "error", "Failed to check Redis cache", e);
 			cov.inforce = false;
 		}
 	}

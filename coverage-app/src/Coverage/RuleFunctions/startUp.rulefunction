@@ -1,0 +1,48 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.startUp {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		// check configuration for 1 of 3 supported cache type
+		Object logger = Log.getLogger("startUp");
+		Config.RedisHTTP = "REDIS_HTTP";
+		Config.RedisLambda = "REDIS_LAMBDA";
+		Config.AS = "AS";
+		String cacheType = System.getGlobalVariableAsString("CACHE_TYPE", "REDIS_HTTP");
+		if (String.matches(cacheType, "REDIS_HTTP|REDIS_LAMBDA|AS")) {
+			Log.log(logger, "info", "Use cache type: %s", cacheType);
+			Config.CacheType = cacheType;
+		} else {
+			Log.log(logger, "error", "CACHE_TYPE %s is invalid, must be REDIS_HTTP, REDIS_LAMBDA, or AS", cacheType);
+			Engine.shutdown(true);
+		}
+		
+		// connect to AS if it is the cache type.
+		/* Assume that AS 3.5 is already setup by the following steps:
+		Edit be-engine.tra
+			tibco.env.FTL_HOME=/opt/tibco/ftl/5.4
+			tibco.env.AS3x_HOME=/opt/tibco/as/3.5
+
+		Start AS data-grid and define a coverage table
+			cd $AS_HOME/samples/scripts
+			../setup
+			./as-start
+			tibdg table create coverage orgid string
+			tibdg column create coverage effective_date string expire_date string
+		*/
+		if (cacheType == Config.AS) {
+			String asURL = System.getGlobalVariableAsString("AS_URL", "http://localhost:8080");
+			Config.AS_URL = asURL;
+			Log.log(logger, "info", "Connecting to AS: %s", asURL);
+			Object storeProperties = Store.ConnectionInfo.create(asURL, "AS"); 
+			Store.connect(storeProperties);
+			RuleFunctions.initCoverage(50);
+		}
+	}
+}

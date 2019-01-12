@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<element:Scorecard xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:element="http:///com/tibco/cep/designtime/core/model/element" namespace="/" folder="/" name="Config" description="" GUID="C0A59C9A-A592-6DBA-A8A2-79A43F49F6D8" ownerProjectName="Coverage" scorecard="true">
+  <properties name="CacheType" ownerProjectName="Coverage" ownerPath="/Config"/>
+  <properties name="RedisHTTP" ownerProjectName="Coverage" ownerPath="/Config"/>
+  <properties name="RedisLambda" ownerProjectName="Coverage" ownerPath="/Config"/>
+  <properties name="AS" ownerProjectName="Coverage" ownerPath="/Config"/>
+  <properties name="AS_URL" ownerProjectName="Coverage" ownerPath="/Config"/>
+</element:Scorecard>

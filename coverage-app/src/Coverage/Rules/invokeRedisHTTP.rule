@@ -1,9 +1,9 @@
 /**
  * @description fetch effective dates of a coverage from cache by calling REST API. 
- *   This is not used. For better performance, it has been replaced by direct Lambda function call.
+ *   Alternatively for better performance, configure the CACHE_TYPE to use direct Lambda function call.
  * @author Playing-Branes.local
  */
-rule Rules.checkCache {
+rule Rules.invokeRedisHTTP {
 	attribute {
 		priority = 5;
 		forwardChain = true;
@@ -13,13 +13,13 @@ rule Rules.checkCache {
 		Concepts.CoverageStatus cov;
 	}
 	when {
-		false;
+		Config.CacheType == Config.RedisHTTP;
 		evt.uuid == cov.reqUuid;
 		cov.effectiveDate == "";
 	}
 	then {
-		Object logger = Log.getLogger("checkCache");
-		String cacheUrl = System.getGlobalVariableAsString("CACHE_URL", "");
+		Object logger = Log.getLogger("invokeRedisHTTP");
+		String cacheUrl = System.getGlobalVariableAsString("REDIS_HTTP_URL", "");
 		String req = cacheUrl + "?key=" + cov.reference;
 		Log.log(logger, "info", "Send cache request: %s", req);
 		try {
@@ -39,7 +39,7 @@ rule Rules.checkCache {
 				cov.inforce = false;
 			}
 		} catch (Exception e) {
-			Log.logException(logger, "error", "Failed to check cache", e);
+			Log.logException(logger, "error", "Failed to check Redis cache", e);
 			cov.inforce = false;
 		}
 	}

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: coverage
 spec:
-  replicas: 1
+  replicas: 3
   strategy: {}
   selector:
     matchLabels:
@@ -17,14 +17,24 @@ spec:
     spec:
       containers:
       - name: coverage
-        image: 742759186184.dkr.ecr.us-west-2.amazonaws.com/coverage:1.0
+        image: 742759186184.dkr.ecr.us-west-2.amazonaws.com/coverage:1.1
         env:
         - name: PU
           value: default
-        - name: CACHE_URL
-          value: https://es0r4xjoeb.execute-api.us-west-2.amazonaws.com/Prod/coveragedata/
+        - name: tra.tibco.env.CUSTOM_EXT_PREPEND_CP
+          value: /opt/tibco/be/ext
         - name: KAFKA_URL
-          value: ab4f847f5112c11e98b64028047d0b43-975457141.us-west-2.elb.amazonaws.com:9094
+          value: a3b31d261135f11e985700abaef74a85-1432225758.us-west-2.elb.amazonaws.com:9094
+        - name: CACHE_TYPE
+          value: REDIS_LAMBDA
+        - name: REDIS_HTTP_URL
+          value: https://es0r4xjoeb.execute-api.us-west-2.amazonaws.com/Prod/coveragedata/
+        - name: AWS_REGION
+          value: us-west-2
+        - name: REDIS_LAMBDA_ARN
+          value: arn:aws:lambda:us-west-2:742759186184:function:coverage-reference-app-CoveragedataFunction-SUM238IKHALO
+        - name: AS_URL
+          value: http://localhost:8080
         ports:
         - containerPort: 8890
 ---

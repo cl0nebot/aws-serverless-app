@@ -2,7 +2,7 @@
 cd $( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 repo=coverage
-image=${repo}:1.0
+image=${repo}:1.1
 
 login=$(aws ecr get-login --no-include-email)
 echo "login ECR"

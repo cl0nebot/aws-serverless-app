@@ -1,6 +1,6 @@
 #!/bin/bash
 SDIR=$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-IMAGE=coverage:1.0
+IMAGE=coverage:1.1
 
 # verify BE_HOME
 ${BE_HOME}/bin/be-engine --help

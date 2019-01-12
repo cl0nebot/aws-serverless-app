@@ -11,8 +11,8 @@ sed -e "s|{{IMAGE}}.*|${IMAGE}|" ./coverage-template.yaml > coverage.yaml
 sed -i -e "s|{{AWS_REGION}}.*|${AWS_REGION}|" ./coverage.yaml
 
 source ${ROOT}/coverage-reference-app/env.sh
-sed -i -e "s|{{CACHE_URL}}.*|${GATEWAY_URL}|" ./coverage.yaml
-sed -i -e "s|{{CACHE_LAMBDA_ARN}}.*|${FUNCTION_ARN}|" ./coverage.yaml
+sed -i -e "s|{{REDIS_HTTP_URL}}.*|${GATEWAY_URL}|" ./coverage.yaml
+sed -i -e "s|{{REDIS_LAMBDA_ARN}}.*|${FUNCTION_ARN}|" ./coverage.yaml
 
 source ${ROOT}/eks/setup/config/env.sh
 sed -i -e "s|{{KAFKA_URL}}.*|${EXTERNAL_BROKER_HOST}:${EXTERNAL_BROKER_PORT}|" ./coverage.yaml

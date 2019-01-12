@@ -4,11 +4,32 @@ This is a TIBCO BusinessEvents project to demostrate the deployment on Kubernete
 
 It also demonstrates the integration with Redis cache via either direct invocation of AWS lambda functions, or via REST API through the AWS API gateway. The direct lambda call is faster because it avoids the round-trip delay to the API gateway, which could save 100 ms or more.  To enable the direct lambda invocation, we have to configure the service role of the EKS cluster, which has been done in the script `eks/aws/efs-sg-rule.sh`.
 
+In addition to Redis cache, this project also implemented rules to fetch coverage data from TIBCO ActiveSpaces, which is a fast distributed data grid for structured tuple data.  You may easily select one of the 3 mechanisms for data cache by editing the `CACHE_TYPE` in `coverage.yaml`. Valid values for this parameter are `REDIS_LAMBDA`, `REDIS_HTTP`, or `AS`.
+
 The coverage service instances are deployed in muliple PODs, and the service is exposed by a LoadBalancer service.  Thus, the coverage service can be auto scaled as described in [kuberneties.io](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
 
 ## Develop BE applications
 
-After you install the TIBCO BusinessEvents 5.5.0 or above, you can launch the BE studio, and import the project source code from `./src/Coverage`.  Then, right click the project root in the "Studio Explorer", and select "Properties". Select "Java Build Path", then edit the jars under the "Libraries" tab.  Notice that this project has compile-time dependency to 2 aws-java-sdk jars for direct invocation of AWS lambda functions.  You need to fix the path of these 2 jars to match your project location. One way to fix the path is to remove and then add them back with correct path.  This step can be automated if you use Maven.  If you are interested in how to setup Maven build and unit test for TIBCO BE projects, you may check the [be-sample](https://github.com/yxuco/be_sample/tree/master/SimpleHTTP) that contains a sample BE project and Maven POM files to build and test the BE project together with dependent Java projects and third-party jars.
+After you install the TIBCO BusinessEvents 5.5.0 or above, you can launch the BE studio, and import the project source code from `./src/Coverage`.  Then, right click the project root in the "Studio Explorer", and select "Properties". Select "Java Build Path", then edit the jars under the "Libraries" tab.  
+
+Note that this project has compile-time dependency to 2 aws-java-sdk jars for direct invocation of AWS lambda functions.  You need to fix the path of these 2 jars to match your project location. One way to fix the path is to remove and then add them back with correct path.  This step can be automated if you use Maven.
+
+If you are interested in how to setup Maven build and unit test for TIBCO BE projects, you may check the steps documented by [BE Developer's Guide](https://docs.tibco.com/pub/businessevents-enterprise/5.5.0/doc/pdf/TIB_businessevents-standard_5.5_developers_guide.pdf?id=7).  Or, for an alternative Maven setup, you may check the [be-sample](https://github.com/yxuco/be_sample/tree/master/SimpleHTTP) that contains a sample BE project and Maven POM files to build and test BE projects together with dependent Java projects and third-party jars.
+
+To test this project with ActiveSpaces, you need to install TIBCO ActiveSpaces 3.5 and TIBCO FTL 5.4 or later, and also
+* Edit `$BE_HOME/be-engine.tra` to set the following env:
+```
+tibco.env.FTL_HOME=/opt/tibco/ftl/5.4
+tibco.env.AS3x_HOME=/opt/tibco/as/3.5
+```
+* Start AS data-grid and define a coverage table:
+```
+cd $AS_HOME/samples/scripts
+../setup
+./as-start
+tibdg table create coverage orgid string
+tibdg column create coverage effective_date string expire_date string
+```
 
 ## Test BE application locally
 

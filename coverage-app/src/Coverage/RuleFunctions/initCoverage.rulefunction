@@ -1,0 +1,36 @@
+/**
+ * @description initialize coverage data in AS
+ */
+void rulefunction RuleFunctions.initCoverage {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		int count;
+	}
+	body {
+		Object logger = Log.getLogger("initCoverage");
+
+		Store.open(Config.AS_URL, "coverage");
+		
+		// initialize test data for coverage
+		for (int i = 0; i < count; i++) {
+			Concepts.Coverage cov = Instance.newTransientInstance("/Concepts/Coverage");
+			int days = Math.floor(10 * Math.random()) - 7;
+			cov.orgid = "C-" + String.padFront(String.valueOfInt(i), 6, "0");
+			cov.effective_date = DateTime.format(DateTime.addDay(DateTime.now(), days), "yyyy-MM-dd");
+			cov.expire_date = DateTime.format(DateTime.addDay(DateTime.now(), days+30), "yyyy-MM-dd");;
+			Log.log(logger, "info", "Put to AS: %s", Instance.serializeToJSON(cov, false, "coverage"));
+			Store.put(Config.AS_URL, "coverage", cov);
+		}
+		Log.log(logger, "info", "Created %d coverage records in AS", count);
+
+		// test get coverage
+		Concepts.Coverage cov5 = Instance.newTransientInstance("/Concepts/Coverage");
+		cov5.orgid = "C-000005";
+		Concepts.Coverage result = Store.get(Config.AS_URL, "coverage", cov5);
+		Log.log(logger, "info", "Get from AS: %s", Instance.serializeToJSON(result, false, "coverage"));
+
+		Store.close(Config.AS_URL, "coverage");
+	}
+}
