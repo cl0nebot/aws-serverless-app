@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <cluster xmlns="http://tibco.com/businessevents/configuration/5.5">
     <revision>
-        <version>4</version>
+        <version>5</version>
         <author>yxu@tibco.com</author>
-        <date>2019/01/06 19:35:39</date>
+        <date>2019/01/12 11:45:18</date>
         <comment/>
     </revision>
     <name>coverage</name>
@@ -74,7 +74,9 @@
                     <uri>/Channels/Coverage/coverage</uri>
                 </destination>
             </destinations>
-            <startup/>
+            <startup>
+                <uri>/RuleFunctions/startUp</uri>
+            </startup>
             <shutdown/>
             <local-cache>
                 <eviction>
